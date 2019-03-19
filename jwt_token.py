@@ -17,7 +17,7 @@ def create_token(issuer, audience=None):
     }
 
     if audience:
-        payload['aud'] = audience
+        payload['audience'] = audience
 
     return jwt.encode(payload, SECRET, algorithm=ALGORITHM)
 
