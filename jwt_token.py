@@ -17,12 +17,12 @@ def create_token(issuer, audience=None):
     }
 
     if audience:
-        payload['audience'] = audience
+        payload['aud'] = audience
 
     return jwt.encode(payload, SECRET, algorithm=ALGORITHM)
 
 
-def token_age(token, aud=None):
+def token_age(token, audience=None):
     """[Finds age of the token in seconds]
     
     Arguments:
@@ -33,8 +33,8 @@ def token_age(token, aud=None):
     """
 
     kwargs = {'algorithms': ALLOWED_ALGORITHMS}
-    if aud:
-        kwargs.update({'aud': aud})
+    if audience:
+        kwargs.update({'audience': audience})
 
     try:
         payload = jwt.decode(token, SECRET, **kwargs)
