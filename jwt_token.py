@@ -2,16 +2,19 @@ import jwt
 import pendulum
 
 from config import SECRET, ALGORITHM, ALLOWED_ALGORITHMS, TZ
+from defaults import TOKEN_EXPIRY_TIME_IN_MINUTES, TOKEN_NBF_IN_SECONDS
+
+from jwt.exceptions import ExpiredSignatureError, InvalidAudienceError, ImmatureSignatureError, InvalidTokenError
 
 
-def create_token(issuer, audience=None):
+def create_token(issuer, audience=None, expiry_time=TOKEN_EXPIRY_TIME_IN_MINUTES, nbf=TOKEN_NBF_IN_SECONDS):
     """[Creates JWT]
     """
 
     payload = {
         'name': 'higsn',
-        'exp': pendulum.now(TZ).add(minutes=3),
-        'nbf': pendulum.now(TZ).add(seconds=10),
+        'exp': pendulum.now(TZ).add(minutes=expiry_time),
+        'nbf': pendulum.now(TZ).add(seconds=nbf),
         'iat': pendulum.now(TZ),
         'iss': issuer   
     }
@@ -38,8 +41,14 @@ def token_age(token, audience=None):
 
     try:
         payload = jwt.decode(token, SECRET, **kwargs)
-    except:
-        return ('error', 'Error while decoding token.')
+    except ExpiredSignatureError:
+        return ('error', 'Token expired')
+    except ImmatureSignatureError:
+        return ('error', 'Token immature')
+    except InvalidAudienceError:
+        return ('error', 'Invalid audience specified')
+    except InvalidTokenError:
+        return ('error', 'Error while decoding token')
 
     issued_time = payload.get('iat')
     if not issued_time:
