@@ -1,5 +1,6 @@
 import jwt
 import pendulum
+from uuid import uuid4
 
 from config import SECRET, ALGORITHM, ALLOWED_ALGORITHMS, TZ
 from defaults import TOKEN_EXPIRY_TIME_IN_MINUTES, TOKEN_NBF_IN_SECONDS
@@ -7,22 +8,29 @@ from defaults import TOKEN_EXPIRY_TIME_IN_MINUTES, TOKEN_NBF_IN_SECONDS
 from jwt.exceptions import ExpiredSignatureError, InvalidAudienceError, ImmatureSignatureError, InvalidTokenError
 
 
-def create_token(issuer, audience=None, expiry_time=TOKEN_EXPIRY_TIME_IN_MINUTES, nbf=TOKEN_NBF_IN_SECONDS):
+def create_token(issuer, subject, scope, audience=None, expiry_time=TOKEN_EXPIRY_TIME_IN_MINUTES, nbf=TOKEN_NBF_IN_SECONDS):
     """[Creates JWT]
     """
 
     payload = {
-        'name': 'higsn',
         'exp': pendulum.now(TZ).add(minutes=expiry_time),
         'nbf': pendulum.now(TZ).add(seconds=nbf),
         'iat': pendulum.now(TZ),
-        'iss': issuer   
+        'iss': issuer,
+        'jti': uuid4().hex,
+        'sub': subject,
+        'scope': scope  
+    }
+
+    headers = {
+        'alg': ALGORITHM,
+        'typ': 'JWT'
     }
 
     if audience:
         payload['aud'] = audience
 
-    return jwt.encode(payload, SECRET, algorithm=ALGORITHM)
+    return jwt.encode(payload, SECRET, algorithm=ALGORITHM, headers=headers)
 
 
 def token_age(token, audience=None):
